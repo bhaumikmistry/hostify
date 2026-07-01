@@ -32,7 +32,7 @@ jobs:
           while IFS= read -r file; do
             [ -z "$file" ] && continue
             if ! echo "$file" | grep -qE '^submissions/[a-z0-9-]+/[a-z0-9-]+/index\.html$'; then
-              ERRORS="${ERRORS}Invalid path: \`$file\` (must be \`submissions/<username>/<title>/index.html\`, lowercase alphanumeric and hyphens only)\n"
+              ERRORS="${ERRORS}${file} — invalid path (must be submissions/<username>/<title>/index.html, lowercase alphanumeric and hyphens only)\n"
             fi
           done <<< "${{ steps.changed.outputs.files }}"
           if [ -n "$ERRORS" ]; then
@@ -53,7 +53,7 @@ jobs:
             [ ! -f "$file" ] && continue
             size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null)
             if [ "$size" -gt "$MAX_SIZE" ]; then
-              ERRORS="${ERRORS}\`$file\` exceeds 500KB limit (${size} bytes)\n"
+              ERRORS="${ERRORS}${file} exceeds 500KB limit (${size} bytes)\n"
             fi
           done <<< "${{ steps.changed.outputs.files }}"
           if [ -n "$ERRORS" ]; then
@@ -73,23 +73,23 @@ jobs:
             [ ! -f "$file" ] && continue
 
             if grep -qi '<iframe' "$file"; then
-              ERRORS="${ERRORS}\`$file\`: contains iframe elements\n"
+              ERRORS="${ERRORS}${file}: contains iframe elements\n"
             fi
 
             if grep -qiE 'action\s*=\s*["'"'"']https?://' "$file"; then
-              ERRORS="${ERRORS}\`$file\`: form with external action\n"
+              ERRORS="${ERRORS}${file}: form with external action\n"
             fi
 
             if grep -qiE 'coinhive|cryptonight|coinlmp|minero|miner\.start' "$file"; then
-              ERRORS="${ERRORS}\`$file\`: suspected crypto mining code\n"
+              ERRORS="${ERRORS}${file}: suspected crypto mining code\n"
             fi
 
             if grep -qiE 'meta[^>]+http-equiv\s*=\s*["'"'"']refresh' "$file"; then
-              ERRORS="${ERRORS}\`$file\`: meta refresh redirect\n"
+              ERRORS="${ERRORS}${file}: meta refresh redirect\n"
             fi
 
             if grep -qiE 'window\.location\s*[=.]|document\.location\s*[=.]|location\.href\s*=' "$file"; then
-              ERRORS="${ERRORS}\`$file\`: JavaScript redirect\n"
+              ERRORS="${ERRORS}${file}: JavaScript redirect\n"
             fi
 
           done <<< "${{ steps.changed.outputs.files }}"
@@ -115,16 +115,28 @@ jobs:
       - name: Comment on PR — failed
         if: failure()
         run: |
-          BODY="❌ **Validation failed**\n\n"
-          if [ -n "${{ steps.structure.outputs.errors }}" ]; then
-            BODY="${BODY}### Structure\n${{ steps.structure.outputs.errors }}\n"
-          fi
-          if [ -n "${{ steps.size.outputs.errors }}" ]; then
-            BODY="${BODY}### File Size\n${{ steps.size.outputs.errors }}\n"
-          fi
-          if [ -n "${{ steps.security.outputs.errors }}" ]; then
-            BODY="${BODY}### Security\n${{ steps.security.outputs.errors }}\n"
-          fi
-          gh pr comment ${{ github.event.pull_request.number }} --body "$(echo -e "$BODY")"
+          {
+            echo "❌ **Validation failed**"
+            echo ""
+            if [ -n "$STRUCTURE_ERRORS" ]; then
+              echo "### Structure"
+              echo "$STRUCTURE_ERRORS"
+              echo ""
+            fi
+            if [ -n "$SIZE_ERRORS" ]; then
+              echo "### File Size"
+              echo "$SIZE_ERRORS"
+              echo ""
+            fi
+            if [ -n "$SECURITY_ERRORS" ]; then
+              echo "### Security"
+              echo "$SECURITY_ERRORS"
+              echo ""
+            fi
+          } > /tmp/comment-body.md
+          gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/comment-body.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STRUCTURE_ERRORS: ${{ steps.structure.outputs.errors }}
+          SIZE_ERRORS: ${{ steps.size.outputs.errors }}
+          SECURITY_ERRORS: ${{ steps.security.outputs.errors }}
