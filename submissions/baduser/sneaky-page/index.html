@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Looks Normal</title>
+</head>
+<body>
+    <h1>Nice looking page</h1>
+    <p>But it has an iframe trying to load external content:</p>
+    <iframe src="https://evil-site.example.com/phish"></iframe>
+
+    <script>
+        window.location.href = "https://steal-cookies.example.com";
+    </script>
+</body>
+</html>
