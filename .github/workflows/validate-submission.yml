@@ -1,0 +1,129 @@
+name: Validate Submission
+
+on:
+  pull_request:
+    paths:
+      - 'submissions/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed
+        run: |
+          FILES=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | grep '^submissions/')
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate structure
+        run: |
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+
+            # Must match submissions/<username>/<title>/index.html
+            if ! echo "$file" | grep -qE '^submissions/[a-z0-9-]+/[a-z0-9-]+/index\.html$'; then
+              echo "::error::Invalid path: $file (must be submissions/<username>/<title>/index.html, lowercase alphanumeric and hyphens only)"
+              exit 1
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+
+      - name: Check file size
+        run: |
+          MAX_SIZE=512000  # 500KB
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+
+            size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null)
+            if [ "$size" -gt "$MAX_SIZE" ]; then
+              echo "::error::$file exceeds 500KB limit (${size} bytes)"
+              exit 1
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+
+      - name: Scan for disallowed external domains
+        run: |
+          ALLOWLIST=$(jq -r '.allowed_domains[]' allowlist.json)
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+
+            # Extract all URLs from the file
+            urls=$(grep -oiE 'https?://[a-zA-Z0-9._/-]+' "$file" || true)
+
+            while IFS= read -r url; do
+              [ -z "$url" ] && continue
+              domain=$(echo "$url" | sed -E 's|https?://([^/]+).*|\1|')
+
+              # Skip github raw (used by the system itself)
+              if echo "$domain" | grep -q 'raw.githubusercontent.com'; then
+                continue
+              fi
+
+              # Check against allowlist
+              allowed=false
+              while IFS= read -r allowed_domain; do
+                if echo "$domain" | grep -q "$allowed_domain"; then
+                  allowed=true
+                  break
+                fi
+              done <<< "$ALLOWLIST"
+
+              if [ "$allowed" = false ]; then
+                echo "::error::$file references disallowed domain: $domain"
+                exit 1
+              fi
+            done <<< "$urls"
+          done <<< "${{ steps.changed.outputs.files }}"
+
+      - name: Scan for malicious patterns
+        run: |
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+
+            # Check for iframes (no nesting allowed)
+            if grep -qi '<iframe' "$file"; then
+              echo "::error::$file contains iframe elements (not allowed)"
+              exit 1
+            fi
+
+            # Check for form actions pointing externally
+            if grep -qiE 'action\s*=\s*["\x27]https?://' "$file"; then
+              echo "::error::$file contains form with external action (not allowed)"
+              exit 1
+            fi
+
+            # Check for known crypto miner scripts
+            if grep -qiE 'coinhive|cryptonight|coinlmp|minero|miner\.start' "$file"; then
+              echo "::error::$file contains suspected crypto mining code"
+              exit 1
+            fi
+
+            # Check for meta refresh redirects
+            if grep -qiE 'meta[^>]+http-equiv\s*=\s*["\x27]refresh' "$file"; then
+              echo "::error::$file contains meta refresh redirect (not allowed)"
+              exit 1
+            fi
+
+            # Check for window.location redirects
+            if grep -qiE 'window\.location\s*[=.]|document\.location\s*[=.]|location\.href\s*=' "$file"; then
+              echo "::error::$file contains JavaScript redirect (not allowed)"
+              exit 1
+            fi
+
+          done <<< "${{ steps.changed.outputs.files }}"
+
+      - name: Validation passed
+        run: echo "All checks passed"
