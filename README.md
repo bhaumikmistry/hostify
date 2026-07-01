@@ -21,7 +21,6 @@ https://bhaumikmistry.com/hostify/<username>/<title>
 ## Rules
 
 - One `index.html` per submission (max 500KB)
-- External resources only from [approved CDNs](allowlist.json)
 - No iframes, no redirects, no form submissions to external URLs
 - No crypto miners or tracking scripts
 - Titles must be lowercase alphanumeric with hyphens (e.g. `my-cool-project`)
@@ -30,6 +29,3 @@ https://bhaumikmistry.com/hostify/<username>/<title>
 
 This repo is a static file store. The viewer at `bhaumikmistry.com/hostify` fetches files from this repo using GitHub raw URLs and renders them in a sandboxed iframe. The iframe `sandbox` attribute restricts what submitted pages can do — scripts can run but cannot access the parent page, cookies, or navigate away.
 
-## Approved CDNs
-
-See [allowlist.json](allowlist.json) for the current list. To request a new CDN, open an issue.
