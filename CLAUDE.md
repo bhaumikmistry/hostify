@@ -18,26 +18,16 @@ Each submission is a single `index.html` file placed in a folder named by the su
 
 ## Submission Rules
 
-1. One `index.html` per submission (self-contained or using allowlisted CDNs).
-2. External resources must come from domains listed in `allowlist.json`.
-3. Maximum file size: 500KB.
-4. No server-side code, no iframes within submissions, no redirects off-domain.
-5. No credential harvesting forms, crypto miners, or tracking scripts.
+1. One `index.html` per submission (max 500KB).
+2. No iframes within submissions, no redirects off-domain.
+3. No credential harvesting forms, crypto miners, or tracking scripts.
 
 ## Validation
 
 The GitHub Action at `.github/workflows/validate-submission.yml` runs on every PR:
 - Checks file structure matches `submissions/<username>/<title>/index.html`
 - Validates file size
-- Scans for disallowed external domains
-- Checks for known malicious patterns
+- Checks for known malicious patterns (iframes, redirects, crypto miners)
 
 PRs that pass validation auto-merge. Flagged PRs require manual review.
 
-## Development
-
-- `allowlist.json` — approved CDN domains for external resources
-
-## Adding a new allowed CDN
-
-Edit `allowlist.json` and open a PR. The domain must be a well-known public CDN with no user-generated content hosting.

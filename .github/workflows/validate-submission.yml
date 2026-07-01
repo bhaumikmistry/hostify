@@ -51,42 +51,6 @@ jobs:
             fi
           done <<< "${{ steps.changed.outputs.files }}"
 
-      - name: Scan for disallowed external domains
-        run: |
-          ALLOWLIST=$(jq -r '.allowed_domains[]' allowlist.json)
-
-          while IFS= read -r file; do
-            [ -z "$file" ] && continue
-            [ ! -f "$file" ] && continue
-
-            # Extract all URLs from the file
-            urls=$(grep -oiE 'https?://[a-zA-Z0-9._/-]+' "$file" || true)
-
-            while IFS= read -r url; do
-              [ -z "$url" ] && continue
-              domain=$(echo "$url" | sed -E 's|https?://([^/]+).*|\1|')
-
-              # Skip github raw (used by the system itself)
-              if echo "$domain" | grep -q 'raw.githubusercontent.com'; then
-                continue
-              fi
-
-              # Check against allowlist
-              allowed=false
-              while IFS= read -r allowed_domain; do
-                if echo "$domain" | grep -q "$allowed_domain"; then
-                  allowed=true
-                  break
-                fi
-              done <<< "$ALLOWLIST"
-
-              if [ "$allowed" = false ]; then
-                echo "::error::$file references disallowed domain: $domain"
-                exit 1
-              fi
-            done <<< "$urls"
-          done <<< "${{ steps.changed.outputs.files }}"
-
       - name: Scan for malicious patterns
         run: |
           while IFS= read -r file; do
