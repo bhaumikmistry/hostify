@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coffee Shop Financial Model — Bed-Stuy, Brooklyn</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; background: #1c1410; color: #f5ebe0; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .serif { font-family: 'Playfair Display', serif; }
+    .sidebar-btn { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; width: 100%; text-align: left; transition: all 0.2s; color: #c4a882; }
+    .sidebar-btn:hover { background: rgba(196,168,130,0.08); color: #f5ebe0; }
+    .sidebar-btn.active { background: rgba(196,168,130,0.15); color: #f0d9b5; font-weight: 600; border-left: 2px solid #d4a574; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    th { text-align: left; padding: 8px 10px; background: rgba(196,168,130,0.06); font-weight: 600; color: #c4a882; border-bottom: 1px solid rgba(196,168,130,0.15); }
+    td { padding: 7px 10px; border-bottom: 1px solid rgba(196,168,130,0.06); color: #e8d5c0; }
+    td.num { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #f0d9b5; }
+    .card { background: rgba(196,168,130,0.04); border: 1px solid rgba(196,168,130,0.12); border-radius: 12px; transition: border-color 0.3s; }
+    .card:hover { border-color: rgba(196,168,130,0.25); }
+    .kpi { text-align: center; padding: 12px; }
+    .kpi-val { font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #f0d9b5; }
+    .kpi-label { font-size: 0.6rem; color: #8b7355; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+    .calc-input { background: rgba(196,168,130,0.06); border: 1px solid rgba(196,168,130,0.2); border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; width: 100%; color: #f5ebe0; font-family: 'JetBrains Mono', monospace; }
+    .calc-input:focus { outline: none; border-color: #d4a574; box-shadow: 0 0 12px rgba(212,165,116,0.15); }
+    .note { font-size: 0.7rem; color: #8b7355; }
+    h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; font-family: 'Playfair Display', serif; color: #f5ebe0; }
+    h3 { font-size: 0.75rem; font-weight: 700; color: #c4a882; text-transform: uppercase; letter-spacing: 1.5px; margin: 20px 0 8px; }
+    .tag { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 0.6rem; font-weight: 600; }
+    .tag-green { background: rgba(34,197,94,0.1); color: #4ade80; }
+    .tag-red { background: rgba(239,68,68,0.1); color: #f87171; }
+    .tag-blue { background: rgba(196,168,130,0.15); color: #d4a574; }
+    .val-pos { color: #4ade80; background: rgba(34,197,94,0.08); padding: 2px 6px; border-radius: 4px; display: inline-block; transition: transform 0.15s, box-shadow 0.15s; cursor: default; }
+    .val-pos:hover { transform: scale(1.1); box-shadow: 0 0 10px rgba(34,197,94,0.3); }
+    .val-neg { color: #fb923c; background: rgba(251,146,60,0.08); padding: 2px 6px; border-radius: 4px; display: inline-block; transition: transform 0.15s, box-shadow 0.15s; cursor: default; }
+    .val-neg:hover { transform: scale(1.1); box-shadow: 0 0 10px rgba(251,146,60,0.3); }
+    .val-pos-strong { color: #4ade80; background: rgba(34,197,94,0.12); padding: 2px 6px; border-radius: 4px; display: inline-block; animation: glow-green 2s ease-in-out infinite alternate; transition: transform 0.15s; }
+    .val-pos-strong:hover { transform: scale(1.15); }
+    .val-neg-strong { color: #f87171; background: rgba(239,68,68,0.12); padding: 2px 6px; border-radius: 4px; display: inline-block; transition: transform 0.15s; }
+    .val-neg-strong:hover { transform: scale(1.1); box-shadow: 0 0 10px rgba(239,68,68,0.3); }
+    @keyframes glow-green { 0% { box-shadow: 0 0 0 rgba(34,197,94,0); } 100% { box-shadow: 0 0 8px rgba(34,197,94,0.3); } }
+    @keyframes steam { 0% { transform: translateY(0) scaleX(1); opacity: 0.3; } 50% { transform: translateY(-10px) scaleX(1.3); opacity: 0.15; } 100% { transform: translateY(-20px) scaleX(0.7); opacity: 0; } }
+    .steam { animation: steam 2.5s ease-in-out infinite; }
+    .grain { position: fixed; inset: 0; pointer-events: none; opacity: 0.02; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E"); }
+    @media (max-width: 768px) {
+      .layout { flex-direction: column !important; }
+      .sidebar { display: none !important; }
+      .mobile-nav { display: flex !important; }
+      .main-content { height: auto !important; padding: 16px !important; }
+      h2 { font-size: 1.2rem; }
+      .kpi-val { font-size: 0.9rem; }
+      table { font-size: 0.65rem; }
+      td, th { padding: 5px 6px; }
+    }
+    .mobile-nav { display: none; position: sticky; top: 0; z-index: 50; background: rgba(20,14,10,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(196,168,130,0.12); padding: 12px 16px; }
+    .mobile-select { background: rgba(196,168,130,0.08); border: 1px solid rgba(196,168,130,0.2); border-radius: 10px; padding: 12px 16px; font-size: 1rem; color: #f0d9b5; width: 100%; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c4a882' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; font-weight: 500; }
+    .mobile-select:focus { outline: none; border-color: #d4a574; }
+  </style>
+
+</head>
+<body>
+  <!-- Mobile dropdown nav -->
+  <div class="mobile-nav">
+    <select class="mobile-select" id="mobileNav">
+      <option value="home">☕ Home</option>
+      <option value="cover">📋 Cover</option>
+      <option value="assumptions">⚙️ Assumptions</option>
+      <option value="revenue">📈 Revenue Build</option>
+      <option value="pnl">💰 P&L Monthly</option>
+      <option value="startup">🏗️ Startup & Funding</option>
+      <option value="annual">📊 Annual Summary</option>
+      <option value="sensitivity">🎯 Sensitivity</option>
+      <option value="sources">📚 Sources</option>
+      <option value="calculator">🧮 Calculator</option>
+    </select>
+  </div>
+
+  <div class="layout flex h-screen">
+    <!-- Grain texture -->
+    <div class="grain"></div>
+
+    <!-- SIDEBAR (20%) -->
+    <nav class="sidebar flex flex-col w-[220px] shrink-0 border-r border-[#3d2e1a]/40 p-3 gap-1 h-screen sticky top-0 overflow-y-auto" style="background: rgba(20,14,10,0.6)">>
+      <div class="mb-4 px-2 pt-2">
+        <div class="flex items-center gap-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="relative">
+            <path d="M3 14c0 3 3 5 7 5h2c4 0 7-2 7-5V8H3v6z" fill="#6b4226" opacity="0.8"/>
+            <path d="M19 9h2a2 2 0 0 1 0 4h-2" stroke="#c4a882" stroke-width="1.5" fill="none"/>
+            <rect x="3" y="7" width="16" height="2" rx="1" fill="#8b5e34"/>
+            <!-- steam -->
+            <path d="M8 5 Q9 3 8 1" stroke="#c4a882" stroke-width="0.7" fill="none" opacity="0.4" class="steam"/>
+            <path d="M12 4 Q13 2 12 0" stroke="#c4a882" stroke-width="0.7" fill="none" opacity="0.3" class="steam" style="animation-delay:0.8s"/>
+          </svg>
+          <p class="text-sm font-bold text-amber-200/90 tracking-wide">Coffee Model</p>
+        </div>
+        <p class="text-[10px] text-[#8b7355] mt-1 pl-7">Bed-Stuy · 1,200sf · 24mo</p>
+      </div>
+      <button class="sidebar-btn active" data-tab="home">🏠 Home</button>
+      <button class="sidebar-btn" data-tab="cover">📋 Cover</button>
+      <button class="sidebar-btn" data-tab="assumptions">⚙️ Assumptions</button>
+      <button class="sidebar-btn" data-tab="revenue">📈 Revenue Build</button>
+      <button class="sidebar-btn" data-tab="pnl">💰 P&L Monthly</button>
+      <button class="sidebar-btn" data-tab="startup">🏗️ Startup & Funding</button>
+      <button class="sidebar-btn" data-tab="annual">📊 Annual Summary</button>
+      <button class="sidebar-btn" data-tab="sensitivity">🎯 Sensitivity</button>
+      <button class="sidebar-btn" data-tab="sources">📚 Sources</button>
+      <button class="sidebar-btn" data-tab="calculator">🧮 Calculator</button>
+      <div class="mt-auto px-2 pb-2 pt-4 text-center">
+        <p class="text-[10px] text-[#8b7355] mb-2">← → to navigate</p>
+        <p class="text-[11px] text-[#8b7355]">by <a href="https://www.riya-goel.com/concepts.html" target="_blank" rel="noopener noreferrer" class="text-[#d4a574] hover:text-[#f0d9b5] underline transition-colors">Riya Goel</a></p>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT (80%) -->
+    <main class="main-content flex-1 h-screen overflow-y-auto p-6 sm:p-10 flex justify-center">
+      <div class="w-full max-w-4xl">
+
+      <!-- HOME -->
+      <div id="tab-home" class="tab-content active">
+        <h2>The Math Behind the Brew</h2>
+        <p class="text-[#c4a882] text-sm mb-6">by <a href="https://www.riya-goel.com/concepts.html" target="_blank" rel="noopener noreferrer" class="text-[#d4a574] hover:text-[#f0d9b5] underline transition-colors">Riya Goel</a> · Operating & startup financial model for a 1,200 sq ft Bed-Stuy cafe.</p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+          <div class="card kpi"><p class="kpi-val text-amber-300">$504K</p><p class="kpi-label">Cash to Open</p></div>
+          <div class="card kpi"><p class="kpi-val">$548K</p><p class="kpi-label">Yr 1 Revenue</p></div>
+          <div class="card kpi"><p class="kpi-val">$687K</p><p class="kpi-label">Yr 2 Revenue</p></div>
+          <div class="card kpi"><p class="kpi-val text-green-400">Mo 11</p><p class="kpi-label">EBITDA +ve</p></div>
+          <div class="card kpi"><p class="kpi-val">70%</p><p class="kpi-label">Prime Cost</p></div>
+        </div>
+
+        <div class="card p-5 mb-6">
+          <h3 class="mt-0">How to use this model</h3>
+          <ul class="text-sm text-[#c4a882] space-y-2 mt-2">
+            <li>→ Use the <strong class="text-[#f0d9b5]">sidebar</strong> (or arrow keys) to navigate between sheets</li>
+            <li>→ <strong class="text-[#f0d9b5]">Assumptions</strong> tab shows every input — in the real spreadsheet, blue cells are editable</li>
+            <li>→ <strong class="text-[#f0d9b5]">Revenue Build</strong> shows the 24-month ramp from opening to stabilized</li>
+            <li>→ <strong class="text-[#f0d9b5]">P&L</strong> shows monthly costs, margins, and when you break even</li>
+            <li>→ <strong class="text-[#f0d9b5]">Sensitivity</strong> shows what happens when traffic or rent changes</li>
+            <li>→ <strong class="text-[#f0d9b5]">Calculator</strong> lets you plug in your own numbers and see results instantly</li>
+          </ul>
+        </div>
+
+        <div class="card p-5">
+          <h3 class="mt-0">What this model tells you</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 text-sm text-[#c4a882]">
+            <div>
+              <p class="text-[#f0d9b5] font-medium mb-1">The honest math</p>
+              <p>At 220 transactions/day and $8.50 avg ticket, EBITDA is barely positive in Year 2. This is a tight model. You need volume OR higher tickets to make real money.</p>
+            </div>
+            <div>
+              <p class="text-[#f0d9b5] font-medium mb-1">The real risk</p>
+              <p>~30% of coffee shops close in year 1. The #1 cause is undercapitalization. This model budgets $168K in working capital specifically for the ramp period cash burn.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COVER -->
+      <div id="tab-cover" class="tab-content">
+        <h2>Cover</h2>
+        <p class="text-[#8b7355] text-sm mb-6">Bedford-Stuyvesant, Brooklyn · ~1,200 sq ft second-generation retail · 24-month lease</p>
+
+        <div class="card p-5 mb-4">
+          <h3 class="mt-0">Why This Location & Structure</h3>
+          <p class="text-sm text-[#c4a882] leading-relaxed mb-3">Prime Williamsburg/DUMBO retail runs $100-200+/sq ft and breaks the 10-15% rent-to-revenue rule for a new cafe. Bed-Stuy corridor offers $50-68/sf with strong foot traffic and growing specialty coffee demand.</p>
+          <p class="text-sm text-[#c4a882] leading-relaxed">A 12-24 month term is a pop-up/short-term deal, not a standard 5-10 yr retail lease. This changes the capital structure, the landlord relationship, and the exit strategy. Prove concept → build brand → negotiate long-term or relocate with leverage.</p>
+        </div>
+
+        <div class="card p-5 mb-4">
+          <h3 class="mt-0">Headline Results (Base Case)</h3>
+          <table>
+            <tr><td>Total cash to open (incl. working-capital reserve)</td><td class="num">$504,057</td></tr>
+            <tr><td>Owner equity required</td><td class="num">$504,057</td></tr>
+            <tr><td>Stabilized annual revenue (run-rate)</td><td class="num">$673,200</td></tr>
+            <tr><td>Year 1 revenue (ramp year)</td><td class="num">$548,097</td></tr>
+            <tr><td>Year 2 revenue</td><td class="num">$687,225</td></tr>
+            <tr><td>Stabilized EBITDA margin (pre owner comp)</td><td class="num">0.6%</td></tr>
+            <tr><td>Year 2 EBITDA (pre owner comp)</td><td class="num">$4,253</td></tr>
+            <tr><td>Prime cost % (COGS + labor) — target < 65%</td><td class="num">70.0%</td></tr>
+            <tr><td>Month EBITDA turns positive</td><td class="num">11</td></tr>
+            <tr><td>Month cumulative cash flow turns positive</td><td class="num">Does not occur in 24 mo</td></tr>
+          </table>
+        </div>
+
+        <div class="card p-5">
+          <h3 class="mt-0">Want to run your own numbers?</h3>
+          <p class="text-sm text-[#c4a882]">Head to the <strong class="text-[#f0d9b5] cursor-pointer" onclick="showTab('calculator')">🧮 Calculator</strong> tab to plug in your own sq ft, rent, traffic, and costs. Results update instantly.</p>
+        </div>
+      </div>
+
+      <!-- ASSUMPTIONS -->
+      <div id="tab-assumptions" class="tab-content">
+        <h2>Assumptions</h2>
+        <p class="text-[#8b7355] text-sm mb-6">Blue = input · Black = formula · All figures drive from here.</p>
+
+        <div class="card p-5 mb-4">
+          <h3 class="mt-0">Scenario Swing Drivers</h3>
+          <table>
+            <thead><tr><th>Driver</th><th class="text-right">Base</th><th class="text-right">Downside</th><th class="text-right">Upside</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td>Transactions/day (stabilized)</td><td class="num">220</td><td class="num">170</td><td class="num">260</td><td class="note">Indie Brooklyn cafe benchmark 180-260/day</td></tr>
+              <tr><td>Average ticket ($)</td><td class="num">$8.50</td><td class="num">$7.75</td><td class="num">$9.25</td><td class="note">NYC specialty: latte $5.5-6.5, drip $4, +pastry</td></tr>
+              <tr><td>Base rent ($/sf/yr)</td><td class="num">$60</td><td class="num">$68</td><td class="num">$54</td><td class="note">Bed-Stuy corridor $50-75</td></tr>
+              <tr><td>COGS multiplier</td><td class="num">1.00x</td><td class="num">1.08x</td><td class="num">0.95x</td><td class="note">Stress on input/dairy/coffee prices</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card p-5 mb-4">
+          <h3 class="mt-0">Space & Lease</h3>
+          <table>
+            <tr><td>Square footage</td><td class="num">1,200</td><td class="note">Cafe-scale (Bklyn avg ~2,360 sf)</td></tr>
+            <tr><td>Seats</td><td class="num">22</td><td class="note">Counter-service + limited seating</td></tr>
+            <tr><td>Lease term (months)</td><td class="num">24</td><td class="note">Short-term / pop-up strategy</td></tr>
+            <tr><td>Rent escalation (%/yr)</td><td class="num">3%</td><td></td></tr>
+            <tr><td>Security deposit (months)</td><td class="num">4</td><td class="note">Short leases: 3-6 mo + personal guarantee</td></tr>
+            <tr><td>Free rent at start (months)</td><td class="num">1</td><td class="note">Build-out concession</td></tr>
+            <tr><td>Base monthly rent</td><td class="num">$6,000</td><td></td></tr>
+          </table>
+        </div>
+
+        <div class="card p-5 mb-4">
+          <h3 class="mt-0">Revenue Drivers</h3>
+          <table>
+            <tr><td>Operating days/year</td><td class="num">360</td><td class="note">Closed ~5 holidays; 7-day operation</td></tr>
+            <tr><td>Beverage % of sales</td><td class="num">65%</td><td></td></tr>
+            <tr><td>Food/pastry % of sales</td><td class="num">25%</td><td></td></tr>
+            <tr><td>Retail (beans/merch) %</td><td class="num">10%</td><td></td></tr>
+            <tr><td>Stabilized annual revenue</td><td class="num">$673,200</td><td class="note">= txns × ticket × days</td></tr>
+          </table>
+        </div>
+
+        <div class="card p-5 mb-4">
+          <h3 class="mt-0">Cost of Goods Sold</h3>
+          <table>
+            <tr><td>Beverage COGS (% of bev sales)</td><td class="num">22%</td><td class="note">Espresso/milk/syrup</td></tr>
+            <tr><td>Food COGS (% of food sales)</td><td class="num">36%</td><td class="note">Wholesale par-baked pastry</td></tr>
+            <tr><td>Retail COGS (% of retail)</td><td class="num">52%</td><td class="note">Bagged beans / merch</td></tr>
+            <tr><td>Packaging & disposables</td><td class="num">5%</td><td class="note">Cups, lids, bags (to-go heavy)</td></tr>
+            <tr><td>Blended product COGS</td><td class="num">28.5%</td><td></td></tr>
+            <tr><td>All-in COGS (incl packaging)</td><td class="num">33.5%</td><td></td></tr>
+          </table>
+        </div>
+
+        <div class="card p-5 mb-4">
+          <h3 class="mt-0">Labor (NYC 2026)</h3>
+          <table>
+            <tr><td>Barista hours/week (stabilized)</td><td class="num">230</td><td class="note">Owner works floor ~40 hr/wk (draw, not here)</td></tr>
+            <tr><td>Blended hourly wage</td><td class="num">$18.00</td><td class="note">NYC min $17; $18 to attract</td></tr>
+            <tr><td>Labor staffing floor</td><td class="num">75%</td><td class="note">Min even in slow months</td></tr>
+            <tr><td>Payroll burden %</td><td class="num">14%</td><td class="note">FICA + UI + WC + paid sick</td></tr>
+            <tr><td>Owner draw ($/yr)</td><td class="num">$60,000</td><td class="note">Below EBITDA line</td></tr>
+            <tr><td>Annual barista cost (burdened)</td><td class="num">$245,419</td><td></td></tr>
+          </table>
+        </div>
+
+        <div class="card p-5">
+          <h3 class="mt-0">Operating Expenses</h3>
+          <table>
+            <tr><td>Utilities (stabilized)</td><td class="num">$2,000/mo</td><td class="note">Espresso, refrigeration, HVAC</td></tr>
+            <tr><td>Insurance (GL + WC + property)</td><td class="num">$14,000/yr</td><td class="note">Required for DOHMH permit</td></tr>
+            <tr><td>Card processing</td><td class="num">2.7%</td><td class="note">92% card share</td></tr>
+            <tr><td>POS / software</td><td class="num">$300/mo</td><td class="note">Toast / Square</td></tr>
+            <tr><td>Repairs & maintenance</td><td class="num">$800/mo</td><td></td></tr>
+            <tr><td>Waste / pest / cleaning</td><td class="num">$750/mo</td><td class="note">Private carter (NYC)</td></tr>
+            <tr><td>Marketing (% of sales)</td><td class="num">4%</td><td></td></tr>
+            <tr><td>Admin / legal / accounting</td><td class="num">$1,400/mo</td><td></td></tr>
+            <tr><td>Misc contingency</td><td class="num">$500/mo</td><td></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- REVENUE BUILD -->
+      <div id="tab-revenue" class="tab-content">
+        <h2>Revenue Build — 24-Month Ramp</h2>
+        <p class="text-[#8b7355] text-sm mb-4">Ramp % is editable in the spreadsheet. Stabilized = 220 txns/day × $8.50 × 30 days = $56,100/mo.</p>
+        <div class="card p-5 overflow-x-auto">
+          <table>
+            <thead><tr><th>Mo</th><th class="text-right">Ramp</th><th class="text-right">Txns/day</th><th class="text-right">Total Txns</th><th class="text-right">Revenue</th><th class="text-right">Bev</th><th class="text-right">Food</th><th class="text-right">Retail</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td class="num">45%</td><td class="num">99</td><td class="num">2,970</td><td class="num">$25,245</td><td class="num">$16,409</td><td class="num">$6,311</td><td class="num">$2,525</td></tr>
+              <tr><td>2</td><td class="num">58%</td><td class="num">128</td><td class="num">3,828</td><td class="num">$32,538</td><td class="num">$21,150</td><td class="num">$8,135</td><td class="num">$3,254</td></tr>
+              <tr><td>3</td><td class="num">68%</td><td class="num">150</td><td class="num">4,488</td><td class="num">$38,148</td><td class="num">$24,796</td><td class="num">$9,537</td><td class="num">$3,815</td></tr>
+              <tr><td>4</td><td class="num">75%</td><td class="num">165</td><td class="num">4,950</td><td class="num">$42,075</td><td class="num">$27,349</td><td class="num">$10,519</td><td class="num">$4,208</td></tr>
+              <tr><td>5</td><td class="num">80%</td><td class="num">176</td><td class="num">5,280</td><td class="num">$44,880</td><td class="num">$29,172</td><td class="num">$11,220</td><td class="num">$4,488</td></tr>
+              <tr><td>6</td><td class="num">84%</td><td class="num">185</td><td class="num">5,544</td><td class="num">$47,124</td><td class="num">$30,631</td><td class="num">$11,781</td><td class="num">$4,712</td></tr>
+              <tr><td>7</td><td class="num">88%</td><td class="num">194</td><td class="num">5,808</td><td class="num">$49,368</td><td class="num">$32,089</td><td class="num">$12,342</td><td class="num">$4,937</td></tr>
+              <tr><td>8</td><td class="num">91%</td><td class="num">200</td><td class="num">6,006</td><td class="num">$51,051</td><td class="num">$33,183</td><td class="num">$12,763</td><td class="num">$5,105</td></tr>
+              <tr><td>9</td><td class="num">94%</td><td class="num">207</td><td class="num">6,204</td><td class="num">$52,734</td><td class="num">$34,277</td><td class="num">$13,184</td><td class="num">$5,273</td></tr>
+              <tr><td>10</td><td class="num">96%</td><td class="num">211</td><td class="num">6,336</td><td class="num">$53,856</td><td class="num">$35,006</td><td class="num">$13,464</td><td class="num">$5,386</td></tr>
+              <tr><td>11</td><td class="num">98%</td><td class="num">216</td><td class="num">6,468</td><td class="num">$54,978</td><td class="num">$35,736</td><td class="num">$13,745</td><td class="num">$5,498</td></tr>
+              <tr class="bg-[#3d2e1a]"><td class="font-bold">12</td><td class="num font-bold">100%</td><td class="num">220</td><td class="num">6,600</td><td class="num font-bold">$56,100</td><td class="num">$36,465</td><td class="num">$14,025</td><td class="num">$5,610</td></tr>
+              <tr><td>13</td><td class="num">97%</td><td class="num">213</td><td class="num">6,402</td><td class="num">$54,417</td><td class="num">$35,371</td><td class="num">$13,604</td><td class="num">$5,442</td></tr>
+              <tr><td>18</td><td class="num">102%</td><td class="num">224</td><td class="num">6,732</td><td class="num">$57,222</td><td class="num">$37,194</td><td class="num">$14,306</td><td class="num">$5,722</td></tr>
+              <tr><td>24</td><td class="num">106%</td><td class="num">233</td><td class="num">6,996</td><td class="num">$59,466</td><td class="num">$38,653</td><td class="num">$14,867</td><td class="num">$5,947</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- P&L -->
+      <div id="tab-pnl" class="tab-content">
+        <h2>P&L — Monthly (24 months)</h2>
+        <p class="text-[#8b7355] text-sm mb-4">EBITDA is pre owner-comp. All formulas driven from Assumptions.</p>
+        <div class="card p-5 overflow-x-auto mb-4">
+          <h3 class="mt-0">Selected Months</h3>
+          <table>
+            <thead><tr><th>Line</th><th class="text-right">Mo 1</th><th class="text-right">Mo 6</th><th class="text-right">Mo 11</th><th class="text-right">Mo 12</th><th class="text-right">Mo 18</th><th class="text-right">Mo 24</th></tr></thead>
+            <tbody>
+              <tr><td>Revenue</td><td class="num">$25,245</td><td class="num">$47,124</td><td class="num">$54,978</td><td class="num">$56,100</td><td class="num">$57,222</td><td class="num">$59,466</td></tr>
+              <tr><td>COGS</td><td class="num">$8,457</td><td class="num">$15,787</td><td class="num">$18,418</td><td class="num">$18,794</td><td class="num">$19,169</td><td class="num">$19,921</td></tr>
+              <tr><td>Gross Profit</td><td class="num">$16,788</td><td class="num">$31,337</td><td class="num">$36,560</td><td class="num">$37,307</td><td class="num">$38,053</td><td class="num">$39,545</td></tr>
+              <tr><td>Labor</td><td class="num">$15,339</td><td class="num">$17,179</td><td class="num">$20,043</td><td class="num">$20,452</td><td class="num">$20,861</td><td class="num">$21,679</td></tr>
+              <tr><td class="note">Labor %</td><td class="num text-[#8b7355]">60.8%</td><td class="num text-[#8b7355]">36.5%</td><td class="num text-[#8b7355]">36.5%</td><td class="num text-[#8b7355]">36.5%</td><td class="num text-[#8b7355]">36.5%</td><td class="num text-[#8b7355]">36.5%</td></tr>
+              <tr><td>Rent</td><td class="num">$0</td><td class="num">$6,000</td><td class="num">$6,000</td><td class="num">$6,000</td><td class="num">$6,180</td><td class="num">$6,180</td></tr>
+              <tr><td>Utilities</td><td class="num">$1,400</td><td class="num">$1,680</td><td class="num">$1,960</td><td class="num">$2,000</td><td class="num">$2,040</td><td class="num">$2,120</td></tr>
+              <tr style="font-weight:600; border-top:1px solid rgba(255,255,255,0.1)"><td>EBITDA</td><td class="num"><span class="val-neg">-$7,878</span></td><td class="num"><span class="val-neg">-$1,462</span></td><td class="num"><span class="val-pos">$637</span></td><td class="num"><span class="val-pos">$803</span></td><td class="num"><span class="val-pos">$193</span></td><td class="num"><span class="val-pos">$690</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Month 1 has $0 rent (free rent concession). Labor % is high early due to staffing floor (75% of stabilized hours even at 45% volume).</p>
+      </div>
+
+      <!-- STARTUP -->
+      <div id="tab-startup" class="tab-content">
+        <h2>Startup & Funding</h2>
+        <p class="text-[#8b7355] text-sm mb-4">One-time cash from conception to opening day.</p>
+        <div class="card p-5">
+          <table>
+            <thead><tr><th>Use of Cash</th><th class="text-right">$</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td>Leasehold build-out ($90/sf)</td><td class="num">$108,000</td><td class="note">Light 2nd-gen food space</td></tr>
+              <tr><td>Architecture / MEP / permits</td><td class="num">$18,000</td><td class="note">DOB filings, drawings</td></tr>
+              <tr><td>Equipment</td><td class="num">$72,000</td><td class="note">Espresso machine $18-25k + grinders + cold + filtration</td></tr>
+              <tr><td>FF&E (millwork, seating, signage)</td><td class="num">$38,000</td><td></td></tr>
+              <tr><td>Smallwares</td><td class="num">$8,000</td><td></td></tr>
+              <tr><td>Initial inventory</td><td class="num">$10,000</td><td></td></tr>
+              <tr><td>Licenses & permits</td><td class="num">$4,000</td><td class="note">DOHMH $280 + Food Protection + DBA</td></tr>
+              <tr><td>Legal / entity / lease review</td><td class="num">$6,000</td><td></td></tr>
+              <tr><td>Branding / web / menu</td><td class="num">$10,000</td><td></td></tr>
+              <tr><td>Pre-opening marketing</td><td class="num">$10,000</td><td></td></tr>
+              <tr><td>Pre-opening labor & training</td><td class="num">$12,000</td><td class="note">Staff ~3 wks pre-open</td></tr>
+              <tr><td>Security deposit (refundable)</td><td class="num">$24,000</td><td class="note">4 months × $6,000</td></tr>
+              <tr><td>Contingency (15% hard costs)</td><td class="num">$33,900</td><td></td></tr>
+              <tr><td>Working-capital reserve</td><td class="num">$168,000</td><td class="note">Ramp cash hole + $25K buffer</td></tr>
+              <tr style="font-weight:700; border-top:2px solid rgba(255,255,255,0.1)"><td>TOTAL CASH TO OPEN</td><td class="num">$504,057</td><td></td></tr>
+            </tbody>
+          </table>
+          <p class="note mt-3">100% owner equity (base case). Short lease impedes SBA. Depreciable base $226K over 24 months.</p>
+        </div>
+      </div>
+
+      <!-- ANNUAL SUMMARY -->
+      <div id="tab-annual" class="tab-content">
+        <h2>Annual Summary & KPIs</h2>
+        <p class="text-[#8b7355] text-sm mb-4">Year 1 = months 1-12 (ramp). Year 2 = months 13-24.</p>
+        <div class="card p-5 mb-4">
+          <table>
+            <thead><tr><th></th><th class="text-right">Year 1</th><th class="text-right">Year 2</th><th class="text-right">Run-Rate</th></tr></thead>
+            <tbody>
+              <tr><td>Revenue</td><td class="num">$548,097</td><td class="num">$687,225</td><td class="num">$713,592</td></tr>
+              <tr><td>Total COGS</td><td class="num">$183,613</td><td class="num">$230,220</td><td class="num">$239,053</td></tr>
+              <tr><td>Gross Profit</td><td class="num">$364,485</td><td class="num">$457,005</td><td class="num">$474,539</td></tr>
+              <tr><td class="note">Gross Margin</td><td class="num text-[#8b7355]">66.5%</td><td class="num text-[#8b7355]">66.5%</td><td class="num text-[#8b7355]">66.5%</td></tr>
+              <tr><td>Total Labor</td><td class="num">$210,856</td><td class="num">$250,532</td><td class="num">$260,144</td></tr>
+              <tr><td class="note">Labor %</td><td class="num text-[#8b7355]">38.5%</td><td class="num text-[#8b7355]">36.5%</td><td class="num text-[#8b7355]">36.5%</td></tr>
+              <tr><td>Prime Cost</td><td class="num">$394,468</td><td class="num">$480,752</td><td class="num">$499,198</td></tr>
+              <tr><td class="note">Prime Cost %</td><td class="num text-[#8b7355]">72.0%</td><td class="num text-[#8b7355]">70.0%</td><td class="num text-[#8b7355]">70.0%</td></tr>
+              <tr><td>Operating Expenses</td><td class="num">$180,859</td><td class="num">$202,220</td><td class="num">$204,869</td></tr>
+              <tr style="font-weight:700; border-top:2px solid rgba(255,255,255,0.1)"><td>EBITDA (pre owner comp)</td><td class="num"><span class="val-neg">-$27,230</span></td><td class="num"><span class="val-pos">$4,253</span></td><td class="num"><span class="val-pos">$9,525</span></td></tr>
+              <tr><td class="note">EBITDA Margin</td><td class="num"><span class="val-neg">-5.0%</span></td><td class="num"><span class="val-pos">0.6%</span></td><td class="num"><span class="val-pos">1.3%</span></td></tr>
+              <tr><td>Owner Draw</td><td class="num">$60,000</td><td class="num">$60,000</td><td class="num">$60,000</td></tr>
+              <tr><td>Cash Flow after Draw</td><td class="num"><span class="val-neg">-$87,230</span></td><td class="num"><span class="val-neg">-$55,747</span></td><td class="num"><span class="val-neg">-$50,475</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card p-5">
+          <h3 class="mt-0">Unit Economics (Year 2)</h3>
+          <table>
+            <tr><td>Revenue per sq ft</td><td class="num">$573</td><td class="note">Target $400-700/sf</td></tr>
+            <tr><td>Seller's Discretionary Earnings (SDE)</td><td class="num">$64,253</td><td class="note">EBITDA + owner comp</td></tr>
+            <tr><td>SDE / total cash invested</td><td class="num">12.7%</td><td class="note">Owner all-in return proxy</td></tr>
+            <tr><td>Peak cash funded during ramp</td><td class="num">$143K</td><td class="note">Max cumulative hole</td></tr>
+            <tr><td>Monthly breakeven revenue</td><td class="num">$54,611</td><td class="note">Cover monthly fixed costs</td></tr>
+            <tr><td>Stabilized revenue/day</td><td class="num">$1,870</td><td></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- SENSITIVITY -->
+      <div id="tab-sensitivity" class="tab-content">
+        <h2>Sensitivity Analysis</h2>
+        <p class="text-[#8b7355] text-sm mb-4">Stabilized annual EBITDA (pre owner comp). <span class="tag tag-green">Profitable</span> <span class="tag tag-red">Loss</span></p>
+
+        <div class="card p-5 mb-4">
+          <h3 class="mt-0">Transactions/day × Average Ticket → Annual EBITDA</h3>
+          <div class="overflow-x-auto">
+            <table>
+              <thead><tr><th>Txns\Ticket</th><th class="text-right">$7.00</th><th class="text-right">$7.75</th><th class="text-right">$8.50</th><th class="text-right">$9.25</th><th class="text-right">$10.00</th></tr></thead>
+              <tbody>
+                <tr><td>150</td><td class="num"><span class="val-neg">-$174K</span></td><td class="num"><span class="val-neg">-$149K</span></td><td class="num"><span class="val-neg">-$125K</span></td><td class="num"><span class="val-neg">-$101K</span></td><td class="num"><span class="val-neg">-$76K</span></td></tr>
+                <tr><td>185</td><td class="num"><span class="val-neg">-$121K</span></td><td class="num"><span class="val-neg">-$91K</span></td><td class="num"><span class="val-neg">-$61K</span></td><td class="num"><span class="val-neg">-$31K</span></td><td class="num"><span class="val-neg">-$1K</span></td></tr>
+                <tr class="bg-[#3d2e1a]"><td class="font-bold">220 ★</td><td class="num"><span class="val-neg">-$68K</span></td><td class="num"><span class="val-neg">-$32K</span></td><td class="num"><span class="val-pos-strong">$3.6K</span></td><td class="num"><span class="val-pos">$39K</span></td><td class="num"><span class="val-pos">$75K</span></td></tr>
+                <tr><td>255</td><td class="num"><span class="val-neg">-$15K</span></td><td class="num"><span class="val-pos">$27K</span></td><td class="num"><span class="val-pos">$68K</span></td><td class="num"><span class="val-pos">$109K</span></td><td class="num"><span class="val-pos">$151K</span></td></tr>
+                <tr><td>290</td><td class="num"><span class="val-pos">$38K</span></td><td class="num"><span class="val-pos">$85K</span></td><td class="num"><span class="val-pos">$132K</span></td><td class="num"><span class="val-pos">$179K</span></td><td class="num"><span class="val-pos">$226K</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card p-5">
+          <h3 class="mt-0">Rent ($/sf) × Weekly Barista Hours → Annual EBITDA</h3>
+          <div class="overflow-x-auto">
+            <table>
+              <thead><tr><th>Rent\Hrs/wk</th><th class="text-right">180</th><th class="text-right">205</th><th class="text-right">230</th><th class="text-right">255</th><th class="text-right">280</th></tr></thead>
+              <tbody>
+                <tr><td>$48</td><td class="num"><span class="val-pos">$71K</span></td><td class="num"><span class="val-pos">$45K</span></td><td class="num"><span class="val-pos">$18K</span></td><td class="num"><span class="val-neg">-$9K</span></td><td class="num"><span class="val-neg">-$35K</span></td></tr>
+                <tr><td>$54</td><td class="num"><span class="val-pos">$64K</span></td><td class="num"><span class="val-pos">$37K</span></td><td class="num"><span class="val-pos">$11K</span></td><td class="num"><span class="val-neg">-$16K</span></td><td class="num"><span class="val-neg">-$43K</span></td></tr>
+                <tr class="bg-[#3d2e1a]"><td class="font-bold">$60 ★</td><td class="num"><span class="val-pos">$57K</span></td><td class="num"><span class="val-pos">$30K</span></td><td class="num"><span class="val-pos-strong">$3.6K</span></td><td class="num"><span class="val-neg">-$23K</span></td><td class="num"><span class="val-neg">-$50K</span></td></tr>
+                <tr><td>$68</td><td class="num"><span class="val-pos">$47K</span></td><td class="num"><span class="val-pos">$21K</span></td><td class="num"><span class="val-neg">-$6K</span></td><td class="num"><span class="val-neg">-$33K</span></td><td class="num"><span class="val-neg">-$59K</span></td></tr>
+                <tr><td>$76</td><td class="num"><span class="val-pos">$38K</span></td><td class="num"><span class="val-pos">$11K</span></td><td class="num"><span class="val-neg">-$16K</span></td><td class="num"><span class="val-neg">-$42K</span></td><td class="num"><span class="val-neg">-$69K</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note mt-2">★ = Base case row highlighted.</p>
+        </div>
+      </div>
+
+      <!-- SOURCES -->
+      <div id="tab-sources" class="tab-content">
+        <h2>Sources & References</h2>
+        <p class="text-[#8b7355] text-sm mb-4">Key inputs verified June 2026.</p>
+        <div class="card p-5">
+          <ul class="space-y-3 text-sm text-[#c4a882]">
+            <li><span class="text-[#f0d9b5]">Brooklyn retail rent ~$56/sf</span> — CommercialCafe / CommercialSearch, 2026</li>
+            <li><span class="text-[#f0d9b5]">Coffee retail $40-80/sf; rent target 10-15% of revenue</span> — My Coffee Explorer 2026</li>
+            <li><span class="text-[#f0d9b5]">NYC build-out $200-500/sf raw; 2nd-gen cheaper</span> — All American Construction Group</li>
+            <li><span class="text-[#f0d9b5]">Coffee build-out $75-150/sf; equip $30-60k</span> — Restroworks 2026</li>
+            <li><span class="text-[#f0d9b5]">DOHMH Food Service permit $280</span> — NYC Business Portal</li>
+            <li><span class="text-[#f0d9b5]">NYC min wage $17.00/hr (1/1/2026)</span> — NY State DOL</li>
+            <li><span class="text-[#f0d9b5]">Indie cafes (&lt;30 locations) not "fast food"</span> — NY Fast Food Worker Fact Sheet</li>
+            <li><span class="text-[#f0d9b5]">Pending Int. 757: $30/hr by 2030</span> — Littler, Mar 2026 (not enacted)</li>
+            <li><span class="text-[#f0d9b5]">Stabilized indie cafe ~200 txns/day @ $6.50</span> — My Coffee Explorer 2026</li>
+            <li><span class="text-[#f0d9b5]">~30% close yr 1; undercapitalization #1 cause</span> — Restroworks 2026</li>
+          </ul>
+          <p class="note mt-4">Figures are planning estimates. Verify current rents, permit fees and wage law before signing.</p>
+        </div>
+      </div>
+
+      <!-- CALCULATOR -->
+      <div id="tab-calculator" class="tab-content">
+        <h2>☕ Your Numbers</h2>
+        <p class="text-[#8b7355] text-sm mb-6">Plug in your scenario. Results update instantly.</p>
+
+        <div class="card p-6 mb-6">
+          <h3 class="mt-0">Space & Rent</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+            <div><label class="block text-xs text-[#8b7355] mb-1">Square footage</label><input type="number" id="c-sqft" value="1200" class="calc-input"></div>
+            <div><label class="block text-xs text-[#8b7355] mb-1">Rent ($/sf/year)</label><input type="number" id="c-rent" value="60" class="calc-input"></div>
+            <div><label class="block text-xs text-[#8b7355] mb-1">Lease term (months)</label><input type="number" id="c-lease" value="24" class="calc-input"></div>
+          </div>
+        </div>
+
+        <div class="card p-6 mb-6">
+          <h3 class="mt-0">Revenue Drivers</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+            <div><label class="block text-xs text-[#8b7355] mb-1">Transactions/day</label><input type="number" id="c-txns" value="220" class="calc-input"></div>
+            <div><label class="block text-xs text-[#8b7355] mb-1">Average ticket ($)</label><input type="number" id="c-ticket" value="8.50" step="0.25" class="calc-input"></div>
+            <div><label class="block text-xs text-[#8b7355] mb-1">Operating days/year</label><input type="number" id="c-days" value="360" class="calc-input"></div>
+          </div>
+        </div>
+
+        <div class="card p-6 mb-6">
+          <h3 class="mt-0">Startup Costs</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+            <div><label class="block text-xs text-[#8b7355] mb-1">Build-out ($/sf)</label><input type="number" id="c-buildout" value="90" class="calc-input"></div>
+            <div><label class="block text-xs text-[#8b7355] mb-1">Equipment ($)</label><input type="number" id="c-equip" value="72000" class="calc-input"></div>
+            <div><label class="block text-xs text-[#8b7355] mb-1">FF&E ($)</label><input type="number" id="c-ffe" value="38000" class="calc-input"></div>
+          </div>
+        </div>
+
+        <div class="card p-6 mb-6">
+          <h3 class="mt-0">Labor</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+            <div><label class="block text-xs text-[#8b7355] mb-1">Barista hours/week</label><input type="number" id="c-hours" value="230" class="calc-input"></div>
+            <div><label class="block text-xs text-[#8b7355] mb-1">Hourly wage ($)</label><input type="number" id="c-wage" value="18" step="0.5" class="calc-input"></div>
+            <div><label class="block text-xs text-[#8b7355] mb-1"># Employees (est.)</label><input type="number" id="c-emps" value="6" class="calc-input"></div>
+          </div>
+        </div>
+
+        <div class="card p-6">
+          <h3 class="mt-0">Results</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3">
+            <div class="bg-[#1c1410] rounded-lg p-3 text-center border border-[#3d2e1a]"><p class="text-[10px] text-[#8b7355] uppercase">Annual Revenue</p><p class="kpi-val text-sm" id="r-revenue">$673,200</p></div>
+            <div class="bg-[#1c1410] rounded-lg p-3 text-center border border-[#3d2e1a]"><p class="text-[10px] text-[#8b7355] uppercase">Monthly Rent</p><p class="kpi-val text-sm" id="r-rent">$6,000</p></div>
+            <div class="bg-[#1c1410] rounded-lg p-3 text-center border border-[#3d2e1a]"><p class="text-[10px] text-[#8b7355] uppercase">Annual Labor</p><p class="kpi-val text-sm" id="r-labor">$245,419</p></div>
+            <div class="bg-[#1c1410] rounded-lg p-3 text-center border border-[#3d2e1a]"><p class="text-[10px] text-[#8b7355] uppercase">Total Startup</p><p class="kpi-val text-sm text-amber-300" id="r-startup">$504,057</p></div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3">
+            <div class="bg-[#1c1410] rounded-lg p-3 text-center border border-[#3d2e1a]"><p class="text-[10px] text-[#8b7355] uppercase">Prime Cost %</p><p class="kpi-val text-sm" id="r-prime">70.0%</p></div>
+            <div class="bg-[#1c1410] rounded-lg p-3 text-center border border-[#3d2e1a]"><p class="text-[10px] text-[#8b7355] uppercase">Revenue/sf</p><p class="kpi-val text-sm" id="r-revsf">$561</p></div>
+            <div class="bg-[#1c1410] rounded-lg p-3 text-center border border-[#3d2e1a]"><p class="text-[10px] text-[#8b7355] uppercase">Est. EBITDA</p><p class="kpi-val text-sm" id="r-ebitda">$4,253</p></div>
+            <div class="bg-[#1c1410] rounded-lg p-3 text-center border border-[#3d2e1a]"><p class="text-[10px] text-[#8b7355] uppercase">Breakeven Mo</p><p class="kpi-val text-sm" id="r-breakeven">~11</p></div>
+          </div>
+        </div>
+      </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Tab navigation
+    const tabs = ['home','cover','assumptions','revenue','pnl','startup','annual','sensitivity','sources','calculator'];
+    let currentIdx = 0;
+
+    function showTab(id) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.sidebar-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      document.querySelector(`[data-tab="${id}"]`).classList.add('active');
+      currentIdx = tabs.indexOf(id);
+      // Sync mobile dropdown
+      const mobileNav = document.getElementById('mobileNav');
+      if (mobileNav) mobileNav.value = id;
+    }
+
+    document.querySelectorAll('.sidebar-btn').forEach(btn => {
+      btn.addEventListener('click', () => showTab(btn.dataset.tab));
+    });
+
+    // Arrow key nav
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); showTab(tabs[Math.min(currentIdx + 1, tabs.length - 1)]); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); showTab(tabs[Math.max(currentIdx - 1, 0)]); }
+    });
+
+    // Mobile nav dropdown
+    document.getElementById('mobileNav').addEventListener('change', (e) => {
+      showTab(e.target.value);
+    });
+
+    // Calculator
+    const $ = id => document.getElementById(id);
+    const fmt = n => '$' + Math.round(n).toLocaleString();
+
+    function recalc() {
+      const sqft = +$('c-sqft').value || 1200;
+      const rentSf = +$('c-rent').value || 60;
+      const txns = +$('c-txns').value || 220;
+      const ticket = +$('c-ticket').value || 8.5;
+      const days = +$('c-days').value || 360;
+      const buildSf = +$('c-buildout').value || 90;
+      const equip = +$('c-equip').value || 72000;
+      const ffe = +$('c-ffe').value || 38000;
+      const hours = +$('c-hours').value || 230;
+      const wage = +$('c-wage').value || 18;
+
+      const annualRev = txns * ticket * days;
+      const monthlyRent = (sqft * rentSf) / 12;
+      const annualLabor = hours * 52 * wage * 1.14; // burdened
+      const cogs = annualRev * 0.335;
+      const primeCost = (cogs + annualLabor) / annualRev * 100;
+
+      // Startup
+      const buildout = sqft * buildSf;
+      const softCosts = 18000 + 8000 + 10000 + 4000 + 6000 + 10000 + 10000 + 12000;
+      const hardCosts = buildout + equip + ffe + 8000;
+      const contingency = hardCosts * 0.15;
+      const deposit = monthlyRent * 4;
+      const workingCap = Math.max(annualRev * 0.25, 100000);
+      const totalStartup = hardCosts + softCosts + contingency + deposit + workingCap;
+
+      // OpEx annual
+      const opex = (monthlyRent * 12) + 14000 + (annualRev * 0.027 * 0.92) + (300+800+750+1400+500)*12 + (annualRev * 0.04) + 2000*12;
+      const ebitda = annualRev - cogs - annualLabor - opex;
+      const breakeven = ebitda > 0 ? Math.round(11 * (4253 / Math.max(ebitda, 1))) : '24+';
+
+      $('r-revenue').textContent = fmt(annualRev);
+      $('r-rent').textContent = fmt(monthlyRent);
+      $('r-labor').textContent = fmt(annualLabor);
+      $('r-startup').textContent = fmt(totalStartup);
+      $('r-prime').textContent = primeCost.toFixed(1) + '%';
+      $('r-revsf').textContent = fmt(annualRev / sqft);
+      $('r-ebitda').innerHTML = (ebitda >= 0 ? '<span class="val-pos-strong">' : '<span class="val-neg">') + fmt(ebitda) + '</span>';
+      $('r-breakeven').textContent = typeof breakeven === 'number' ? '~' + breakeven : breakeven;
+    }
+
+    document.querySelectorAll('.calc-input').forEach(el => el.addEventListener('input', recalc));
+    recalc();
+  </script>
+</body>
+</html>
