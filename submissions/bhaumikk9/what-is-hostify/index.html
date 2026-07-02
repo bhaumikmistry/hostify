@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hostify — Why It Exists</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; background: #08080c; color: #d4d4d8; }
+    .gradient-text { background: linear-gradient(135deg, #a78bfa, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .glass { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; }
+  </style>
+</head>
+<body class="min-h-screen px-4 sm:px-8 py-10 sm:py-16">
+  <div class="max-w-3xl mx-auto">
+
+    <!-- Title -->
+    <h1 class="text-3xl sm:text-4xl font-extrabold mb-2"><span class="gradient-text">Hostify</span></h1>
+    <p class="text-zinc-500 text-sm mb-10">A place to put your HTML on the internet. Nothing more.</p>
+
+    <!-- Two column layout for dense content -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+
+      <!-- Left: The story -->
+      <div>
+        <h2 class="text-sm font-bold text-zinc-300 uppercase tracking-wider mb-3">Why</h2>
+        <p class="text-sm text-zinc-400 leading-relaxed mb-3">
+          AI models got good at generating HTML. You describe a page, you get a working site in seconds. But then you have an HTML file on your computer with no simple way to show it to anyone.
+        </p>
+        <p class="text-sm text-zinc-400 leading-relaxed mb-3">
+          For a non-technical person who just asked ChatGPT to make them a portfolio, the path from "file on desktop" to "link I can share" is surprisingly hard. You need a hosting account, or git knowledge, or to figure out Netlify/Vercel/GitHub Pages.
+        </p>
+        <p class="text-sm text-zinc-400 leading-relaxed">
+          Hostify removes all of that. Pick a name, upload your file, get a URL. The simplest path from HTML file to live webpage.
+        </p>
+      </div>
+
+      <!-- Right: How it works -->
+      <div>
+        <h2 class="text-sm font-bold text-zinc-300 uppercase tracking-wider mb-3">How</h2>
+        <p class="text-sm text-zinc-400 leading-relaxed mb-3">
+          Submissions are stored in a public GitHub repo. When you upload, a PR is created. An automated CI pipeline checks for security issues (redirects, iframes, miners, phishing forms).
+        </p>
+        <p class="text-sm text-zinc-400 leading-relaxed mb-3">
+          If checks pass, the file merges and is instantly live at a permanent URL. Your page renders inside a sandboxed iframe, so it runs JavaScript freely without affecting anything else.
+        </p>
+        <p class="text-sm text-zinc-400 leading-relaxed">
+          Open source. Transparent rules. No black box. One file per page, self-contained HTML only, max 500KB.
+        </p>
+      </div>
+    </div>
+
+    <!-- Cards row -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+      <div class="glass p-4">
+        <h3 class="text-xs font-bold text-zinc-300 mb-1">Not a website builder</h3>
+        <p class="text-xs text-zinc-500 leading-relaxed">You bring your own HTML. AI-generated, hand-written, exported from anywhere. Hostify just hosts it.</p>
+      </div>
+      <div class="glass p-4">
+        <h3 class="text-xs font-bold text-zinc-300 mb-1">Not a full platform</h3>
+        <p class="text-xs text-zinc-500 leading-relaxed">One file per page. No databases, no server code, no multi-file projects. Just a single HTML file.</p>
+      </div>
+      <div class="glass p-4">
+        <h3 class="text-xs font-bold text-zinc-300 mb-1">Not anonymous</h3>
+        <p class="text-xs text-zinc-500 leading-relaxed">You pick a username. Pages live under your name. There's a review step before anything goes public.</p>
+      </div>
+    </div>
+
+    <!-- Who it's for + rules side by side -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+      <div>
+        <h2 class="text-sm font-bold text-zinc-300 uppercase tracking-wider mb-3">Who it's for</h2>
+        <ul class="space-y-2 text-sm text-zinc-400">
+          <li>→ The person who asked AI to make a landing page and doesn't know what to do next</li>
+          <li>→ The developer sharing a quick demo without setting up infrastructure</li>
+          <li>→ The student learning HTML who wants their first page on the real internet</li>
+          <li>→ Anyone with a single HTML file who wants the world to see it</li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="text-sm font-bold text-zinc-300 uppercase tracking-wider mb-3">Rules</h2>
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <p class="text-green-400 font-semibold mb-1">Allowed</p>
+            <ul class="space-y-1 text-zinc-500">
+              <li>✓ Any CDN (Tailwind, GSAP, etc.)</li>
+              <li>✓ External images/fonts</li>
+              <li>✓ Canvas, WebGL, SVG</li>
+              <li>✓ JavaScript</li>
+              <li>✓ Up to 500KB</li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-red-400 font-semibold mb-1">Blocked</p>
+            <ul class="space-y-1 text-zinc-500">
+              <li>✗ Iframes</li>
+              <li>✗ Redirects</li>
+              <li>✗ External form actions</li>
+              <li>✗ Crypto miners</li>
+              <li>✗ Meta refresh</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Closing -->
+    <div class="border-t border-zinc-800/50 pt-6 flex items-center justify-between">
+      <p class="text-xs text-zinc-600">hostify — by bhaumik mistry</p>
+      <p class="text-sm text-zinc-400 font-medium">One file. One URL. That's it.</p>
+    </div>
+
+  </div>
+</body>
+</html>
